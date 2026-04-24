@@ -36,6 +36,29 @@ class Distiller(nn.Module):
             self.set_and_load_existing_projectors()
             log_rank(f"t2s projector structure: {self.t2s_projector}")
             log_rank(f"s2t projector structure: {self.s2t_projector}")
+
+        self.mta_projector_list = None
+        if self.teacher_model:
+            if args.model_type == 'gpt2':
+                student_hidden_size = self.student_model.config.n_embd
+            else:
+                student_hidden_size = self.student_model.config.hidden_size
+            
+            if args.teacher_model_type == 'gpt2':
+                teacher_hidden_size = self.teacher_model.config.n_embd
+            else:
+                teacher_hidden_size = self.teacher_model.config.hidden_size
+
+            projector_list = nn.ModuleList()
+            for _ in range(len(args.teacher_layer_mapping)):
+                projector = nn.Linear(student_hidden_size, teacher_hidden_size)
+                projector = projector.to(device)
+                projector_list.append(projector)
+                    
+            else:
+                projector_list = None
+
+            self.mta_projector_list = projector_list
         
         if args.teacher_to_student_token_mapping is not None:  # only for MinED
             self.tea2stu_token_mapping = json.load(open(args.teacher_to_student_token_mapping))
@@ -89,6 +112,11 @@ class Distiller(nn.Module):
                            help='only conduct kd in teacher space')
         group.add_argument("--t2s-agreement", type=float, default=1.0,
                            help='whether adds the t2s_agreement_mask')
+        
+        group.add_argument("--student_layer_mapping", nargs='+', type=int, default=[-1])
+        group.add_argument("--teacher_layer_mapping", nargs='+', type=int, default=[-1])
+        group.add_argument("--split_layer_mapping", nargs='+', type=int, default=[0, 0, 0, 0])
+        group.add_argument("--w-span-loss", type=float, default=1.0)
         
         return parser
     
@@ -290,6 +318,13 @@ class Distiller(nn.Module):
                 optimizer.add_param_group({
                     "params": [p for p in self.t2s_projector.parameters()],
                 })
+
+        if self.mta_projector_list is not None:
+            optimizer.add_param_group({
+            "params": self.mta_projector_list.parameters(),
+            "lr": 5e-4
+        })
+            
         return optimizer
 
     def forward(self, criterion, batch, logging_output):
