@@ -122,6 +122,7 @@ OPTS+=" --top-p 1.0"
 OPTS+=" --temperature 1.0"
 
 #MTA
+OPTS+=" --MTA-mode"
 OPTS+=" --teacher_layer_mapping 16 24 32"
 OPTS+=" --student_layer_mapping 4 6 8"
 OPTS+=" --split_layer_mapping 0 1 3 3"

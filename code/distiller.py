@@ -117,6 +117,7 @@ class Distiller(nn.Module):
         group.add_argument("--teacher_layer_mapping", nargs='+', type=int, default=[-1])
         group.add_argument("--split_layer_mapping", nargs='+', type=int, default=[0, 0, 0, 0])
         group.add_argument("--w-span-loss", type=float, default=1.0)
+        group.add_argument("--MTA-mode", action="store_true", help='use MTA')
         
         return parser
     
