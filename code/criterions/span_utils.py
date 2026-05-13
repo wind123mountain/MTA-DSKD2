@@ -82,9 +82,10 @@ def compute_hidden_span_loss(projector, s_span_repr, t_span_repr, valid_span_mas
     device = s_span_repr.device
     B_size, Max_Spans = valid_span_mask.shape
     
-    s_span_proj = projector(s_span_repr) 
+    # s_span_proj = projector(s_span_repr) 
     
-    valid_s = s_span_proj[valid_span_mask] # (N_valid, D)
+    # valid_s = s_span_proj[valid_span_mask] # (N_valid, D)
+    valid_s = s_span_repr[valid_span_mask] # (N_valid, D)
     valid_t = t_span_repr[valid_span_mask] # (N_valid, D)
     valid_w = w_sum[valid_span_mask]       # (N_valid)
     
